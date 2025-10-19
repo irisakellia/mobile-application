@@ -1,21 +1,30 @@
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from './firebase';
 import { Product, Category } from '../types';
+import { sampleProducts, sampleCategories } from './sampleData';
 
 class ProductService {
   async getProducts(): Promise<Product[]> {
     try {
+      // Try to get from Firebase first
       const productsRef = collection(db, 'products');
       const snapshot = await getDocs(productsRef);
       
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      })) as Product[];
+      if (snapshot.docs.length > 0) {
+        return snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+        })) as Product[];
+      } else {
+        // Return sample data if Firebase is empty
+        return sampleProducts;
+      }
     } catch (error: any) {
-      throw new Error(error.message);
+      // Return sample data if Firebase fails
+      console.log('Using sample data for products');
+      return sampleProducts;
     }
   }
 
