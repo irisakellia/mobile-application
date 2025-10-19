@@ -30,18 +30,26 @@ class ProductService {
 
   async getFeaturedProducts(): Promise<Product[]> {
     try {
+      // Try to get from Firebase first
       const productsRef = collection(db, 'products');
       const q = query(productsRef, where('featured', '==', true), limit(10));
       const snapshot = await getDocs(q);
       
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      })) as Product[];
+      if (snapshot.docs.length > 0) {
+        return snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+        })) as Product[];
+      } else {
+        // Return featured sample products
+        return sampleProducts.filter(product => product.featured);
+      }
     } catch (error: any) {
-      throw new Error(error.message);
+      // Return featured sample products if Firebase fails
+      console.log('Using sample data for featured products');
+      return sampleProducts.filter(product => product.featured);
     }
   }
 
@@ -64,15 +72,23 @@ class ProductService {
 
   async getCategories(): Promise<Category[]> {
     try {
+      // Try to get from Firebase first
       const categoriesRef = collection(db, 'categories');
       const snapshot = await getDocs(categoriesRef);
       
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Category[];
+      if (snapshot.docs.length > 0) {
+        return snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Category[];
+      } else {
+        // Return sample categories
+        return sampleCategories;
+      }
     } catch (error: any) {
-      throw new Error(error.message);
+      // Return sample categories if Firebase fails
+      console.log('Using sample data for categories');
+      return sampleCategories;
     }
   }
 
